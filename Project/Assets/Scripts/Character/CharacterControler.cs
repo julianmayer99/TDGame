@@ -6,6 +6,8 @@ using UnityEngine.InputSystem;
 public class CharacterControler : MonoBehaviour
 {
     private Rigidbody rb;
+    private CharacterReferences rf;
+    private Animator animator;
 
     //States
     enum Status
@@ -26,16 +28,9 @@ public class CharacterControler : MonoBehaviour
     private Vector3 move_speedDesired = new Vector3();
 
     //Animating
-    private Animator animator;
 
     private float moveAnim_walking_speedThreshhold = 0.2f;
     private float moveAnim_running_speedThreshhold = 18f;
-    [SerializeField]
-    private GameObject anim_flame_main;
-    [SerializeField]
-    private GameObject anim_flame_left;
-    [SerializeField]
-    private GameObject anim_flame_right;
 
     //Carrying
 
@@ -44,8 +39,13 @@ public class CharacterControler : MonoBehaviour
     private int destroy_shotCountMax = 2;
     private void Awake()
     {
+        rf = GetComponent<CharacterReferences>();
         rb = GetComponent<Rigidbody>();
         animator = GetComponent<Animator>();
+
+        //Deactivate ParticleSystems
+        rf.anim_partSystemShot.Stop();
+        rf.anim_partSystemCarry.Stop();
     }
     void Start()
     {
@@ -84,19 +84,23 @@ public class CharacterControler : MonoBehaviour
                 break;
             //Destroy
             case Status.Destroy:
-                DestroyAnimating();
                 break;
             
         }
     }
 
+    //Movement
     private void MovementInit()
     {
         currentState = Status.Move;
         animator.SetTrigger("Move");
 
         //Activate Right hand flame
-        anim_flame_right.transform.Find("Flame").GetComponent<SkinnedMeshRenderer>().enabled = true;
+        rf.anim_flame_right.transform.Find("Flame").GetComponent<SkinnedMeshRenderer>().enabled = true;
+        rf.anim_flame_right.transform.Find("Spot Light").GetComponent<Light>().enabled = true;
+
+        //Switch HeadMaterial
+        transform.Find("Head").GetComponent<SkinnedMeshRenderer>().material = rf.mt_headNeutral;
     }
     private void MoveState()
     {
@@ -104,7 +108,7 @@ public class CharacterControler : MonoBehaviour
         if (input_movement.magnitude < move_accelMin)
         {
             move_speedDesired *= 0f;
-            Debug.Log("NO INPUT constraint " + input_movement);
+            //Debug.Log("NO INPUT constraint " + input_movement);
         }
         //Accellerate
         else
@@ -113,11 +117,11 @@ public class CharacterControler : MonoBehaviour
             if (rb.velocity.magnitude > move_maxSpeed)
             {
                 rb.velocity = rb.velocity.normalized * move_maxSpeed;
-                Debug.Log("MAX Velocity constraint");
+                //Debug.Log("MAX Velocity constraint");
             }
             else
             {
-                Debug.Log("INPUT: " + input_movement + "/ DesiredSpeed: " + move_speedDesired);
+                //Debug.Log("INPUT: " + input_movement + "/ DesiredSpeed: " + move_speedDesired);
             }
         }
     }
@@ -155,11 +159,18 @@ public class CharacterControler : MonoBehaviour
     }
     private void MovementAnimatingFlame(int level)
     {
-        anim_flame_main.GetComponent<Animator>().SetInteger("Level", level);
-        anim_flame_right.GetComponent<Animator>().SetInteger("Level", level);
-        anim_flame_left.GetComponent<Animator>().SetInteger("Level", level);
+        rf.anim_flame_main.GetComponent<Animator>().SetInteger("Level", level);
+        rf.anim_flame_right.GetComponent<Animator>().SetInteger("Level", level);
+        rf.anim_flame_left.GetComponent<Animator>().SetInteger("Level", level);
     }
 
+    //Carry
+    private void CarryInit()
+    {
+
+    }
+
+    //Destroy
     private void DestroyInit()
     {
         currentState = Status.Destroy;
@@ -167,17 +178,28 @@ public class CharacterControler : MonoBehaviour
         destroy_shotCount = 1;
 
         //Deactivate Right hand flame
-        anim_flame_right.transform.Find("Flame").GetComponent<SkinnedMeshRenderer>().enabled = false;
+        rf.anim_flame_right.transform.Find("Flame").GetComponent<SkinnedMeshRenderer>().enabled = false;
+        rf.anim_flame_right.transform.Find("Spot Light").GetComponent<Light>().enabled = false;
+
+        //Switch HeadMaterial
+        transform.Find("Head").GetComponent<SkinnedMeshRenderer>().material = rf.mt_headFocus;
+
     }
     private void DestroyAdd()
     {
         destroy_shotCount++;
         if (destroy_shotCount > destroy_shotCountMax)
             destroy_shotCount = destroy_shotCountMax;
-        Debug.Log("DestroyAdd " + destroy_shotCount);
     }
-    private void DestroyAnimating()
+    private void DestroyEmitShot()
     {
+        destroy_shotCount--;
+        GameObject p = Instantiate(rf.prefab_projectile) as GameObject;
+        p.transform.position = rf.anim_flame_right.transform.position;
+        p.transform.rotation = transform.rotation;
+
+        //Particles
+        rf.anim_partSystemShot.Play();
     }
 
 
@@ -186,7 +208,7 @@ public class CharacterControler : MonoBehaviour
     {
         if (val == 1)
         {
-            destroy_shotCount--;
+            DestroyEmitShot();
         }
         else
         {
@@ -213,6 +235,17 @@ public class CharacterControler : MonoBehaviour
         else
         {
             DestroyAdd();
+        }
+    }
+    private void OnCarry()
+    {
+        if (currentState != Status.Carry)
+        {
+            CarryInit();
+        }
+        else
+        {
+            MovementInit();
         }
     }
 }

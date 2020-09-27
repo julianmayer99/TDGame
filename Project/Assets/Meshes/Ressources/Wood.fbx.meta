@@ -1,24 +1,14 @@
 fileFormatVersion: 2
-guid: 203fefb56717b1b498e25b7049ec29fd
+guid: 246df3dacbb4f824c8eaed361d1254ef
 ModelImporter:
   serializedVersion: 20101
-  internalIDToNameTable:
+  internalIDToNameTable: []
+  externalObjects:
   - first:
-      74: -8945691123924629249
-    second: Armature|Idle
-  - first:
-      74: -3828583913261678786
-    second: Armature|Running
-  - first:
-      74: 8757738883433557109
-    second: Armature|Running 2
-  - first:
-      74: -8258996780291451000
-    second: Armature|T Pose
-  - first:
-      74: -4274770991410265338
-    second: Armature|Walking
-  externalObjects: {}
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: mat_texture
+    second: {fileID: 2100000, guid: a598a1a15ade6bb4cbeee93a737bebad, type: 2}
   materials:
     materialImportMode: 1
     materialName: 0
