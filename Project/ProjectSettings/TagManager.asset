@@ -7,6 +7,7 @@ TagManager:
   - RobotTarget
   - RobotProjectile
   - Ressource
+  - RessourceItem
   layers:
   - Default
   - TransparentFX

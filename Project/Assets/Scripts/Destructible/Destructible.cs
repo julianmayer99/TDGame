@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-public class Destructible : MonoBehaviour
+public abstract class Destructible : MonoBehaviour
 {
     public float maxHealth;
     public float health;
@@ -25,6 +25,7 @@ public class Destructible : MonoBehaviour
     }
     public virtual void Destruct()
     {
+        Debug.Log("Destructible Destructed");
         Destroy(gameObject);
     }
 }

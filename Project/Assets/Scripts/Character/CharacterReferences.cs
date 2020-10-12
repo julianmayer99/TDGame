@@ -12,6 +12,11 @@ public class CharacterReferences : MonoBehaviour
     public GameObject prefab_projectile;
 
 
+    public GameObject head;
+    public GameObject carry;
+
+    public GameObject col_carryRange;
+
     public GameObject anim_flame_main;
     public GameObject anim_flame_left;
     public GameObject anim_flame_right;

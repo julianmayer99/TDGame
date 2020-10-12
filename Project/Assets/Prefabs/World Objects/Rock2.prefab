@@ -11,8 +11,8 @@ GameObject:
   - component: {fileID: 5047484701906012272}
   - component: {fileID: 8188563381588625365}
   - component: {fileID: 6217052483387945759}
-  - component: {fileID: 4721740444082670612}
   - component: {fileID: 1524186918}
+  - component: {fileID: 2960201396090601110}
   m_Layer: 0
   m_Name: Rock2
   m_TagString: Untagged
@@ -84,20 +84,6 @@ MeshRenderer:
   m_SortingLayer: 0
   m_SortingOrder: 0
   m_AdditionalVertexStreams: {fileID: 0}
---- !u!114 &4721740444082670612
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 5568582447016432330}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 5c134d867c3b19240a04e5cb06f0c3ff, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  maxHealth: 100
-  health: 0
 --- !u!135 &1524186918
 SphereCollider:
   m_ObjectHideFlags: 0
@@ -109,8 +95,23 @@ SphereCollider:
   m_IsTrigger: 0
   m_Enabled: 1
   serializedVersion: 2
-  m_Radius: 17.27
-  m_Center: {x: 0.16915882, y: -14.09, z: -0.32}
+  m_Radius: 3.6709538
+  m_Center: {x: 0.16915894, y: -0.4009533, z: -0.3199997}
+--- !u!114 &2960201396090601110
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5568582447016432330}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b203a24eacf9b6e4e93d71f181b25c16, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  maxHealth: 100
+  health: 0
+  stonePrefab: {fileID: 2589033912315582360, guid: e9865641ee7791d4d915dcc138aea1a9, type: 3}
 --- !u!1001 &942652199366149660
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -126,13 +127,21 @@ PrefabInstance:
       propertyPath: m_Size.z
       value: 6.9909296
       objectReference: {fileID: 0}
+    - target: {fileID: 5517477737147478280, guid: 417b79681d4e37946b2c8e75fca5faef, type: 3}
+      propertyPath: m_Size.y
+      value: 4.847377
+      objectReference: {fileID: 0}
+    - target: {fileID: 5517477737147478280, guid: 417b79681d4e37946b2c8e75fca5faef, type: 3}
+      propertyPath: m_Center.y
+      value: 0.47
+      objectReference: {fileID: 0}
     - target: {fileID: 5517477737147478282, guid: 417b79681d4e37946b2c8e75fca5faef, type: 3}
       propertyPath: m_LocalPosition.x
       value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 5517477737147478282, guid: 417b79681d4e37946b2c8e75fca5faef, type: 3}
       propertyPath: m_LocalPosition.y
-      value: 0.59
+      value: 1.807
       objectReference: {fileID: 0}
     - target: {fileID: 5517477737147478282, guid: 417b79681d4e37946b2c8e75fca5faef, type: 3}
       propertyPath: m_LocalPosition.z

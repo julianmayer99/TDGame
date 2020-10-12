@@ -19,20 +19,24 @@ public class CharacterControler : MonoBehaviour
     private Status currentState = Status.Move;
 
     //Movement
+    private float movementInput_accelMin = 0.1f;
+    private float movement_rotateSpeed = 8f;
+    private float movement_accel = 40f;
+    private Vector3 movement_speedDesired = new Vector3();
+
+
+    //Move
     private Vector3 input_movement = new Vector3();
-
-    private float move_accel = 50f; //In units per second
-    private float move_accelMin = 0.1f;
     private float move_maxSpeed = 22f;
-    private float move_rotateSpeed = 8f;
-    private Vector3 move_speedDesired = new Vector3();
-
-    //Animating
-
+        //Animating
     private float moveAnim_walking_speedThreshhold = 0.2f;
     private float moveAnim_running_speedThreshhold = 18f;
 
     //Carrying
+    private float carry_maxSpeed = 14f;
+    private GameObject carry_object;
+
+    private float carry_force = 20f;
 
     //Destroy
     private int destroy_shotCount;
@@ -41,7 +45,7 @@ public class CharacterControler : MonoBehaviour
     {
         rf = GetComponent<CharacterReferences>();
         rb = GetComponent<Rigidbody>();
-        animator = GetComponent<Animator>();
+        animator = transform.GetChild(0).GetComponent<Animator>();
 
         //Deactivate ParticleSystems
         rf.anim_partSystemShot.Stop();
@@ -60,37 +64,26 @@ public class CharacterControler : MonoBehaviour
     
     private void FixedUpdate()
     {
-        if (currentState == Status.Move)
-        {
-            MoveState();
-            MovementAnimating();
-        }
-        else
-        {
-            move_speedDesired = Vector3.zero;
-        }
-        MoveApply();
-
         switch (currentState)
         { 
             //Moving
             case Status.Move:
                 MoveState();
-                MoveApply();
-                MovementAnimating();
                 break;
             //Carrying
             case Status.Carry:
+                CarryState();
                 break;
             //Destroy
             case Status.Destroy:
                 break;
             
         }
+        MovementApply();
     }
 
     //Movement
-    private void MovementInit()
+    private void MoveInit()
     {
         currentState = Status.Move;
         animator.SetTrigger("Move");
@@ -99,53 +92,43 @@ public class CharacterControler : MonoBehaviour
         rf.anim_flame_right.transform.Find("Flame").GetComponent<SkinnedMeshRenderer>().enabled = true;
         rf.anim_flame_right.transform.Find("Spot Light").GetComponent<Light>().enabled = true;
 
+
         //Switch HeadMaterial
-        transform.Find("Head").GetComponent<SkinnedMeshRenderer>().material = rf.mt_headNeutral;
+        rf.head.GetComponent<SkinnedMeshRenderer>().material = rf.mt_headNeutral;
     }
     private void MoveState()
     {
-        //Decellerate
-        if (input_movement.magnitude < move_accelMin)
-        {
-            move_speedDesired *= 0f;
-            //Debug.Log("NO INPUT constraint " + input_movement);
-        }
-        //Accellerate
-        else
-        {
-            move_speedDesired = input_movement * move_maxSpeed;
-            if (rb.velocity.magnitude > move_maxSpeed)
-            {
-                rb.velocity = rb.velocity.normalized * move_maxSpeed;
-                //Debug.Log("MAX Velocity constraint");
-            }
-            else
-            {
-                //Debug.Log("INPUT: " + input_movement + "/ DesiredSpeed: " + move_speedDesired);
-            }
-        }
+        Movement(move_maxSpeed);
+        MovementAnimating();
     }
-    private void MoveApply()
+    private void Movement(float maxSpeed)
+    {
+        //Set DesiredSpeed
+        movement_speedDesired = input_movement * maxSpeed;
+    }
+    private void MovementApply()
     {
         //Apply Speed
-        move_speedDesired.y = rb.velocity.y;
-        rb.velocity = Vector3.Lerp(rb.velocity, move_speedDesired, move_accel);
+        Vector3 currentSpeed = new Vector3(rb.velocity.x,0,rb.velocity.z);
+        currentSpeed = Vector3.Lerp(currentSpeed, movement_speedDesired, movement_accel);
+        currentSpeed.y = rb.velocity.y;
+        rb.velocity = currentSpeed;
         //Set Heading
         if (input_movement != Vector3.zero)
         {
-            transform.rotation = Quaternion.Slerp(transform.rotation, Quaternion.LookRotation(input_movement), move_rotateSpeed * Time.deltaTime);
+            transform.rotation = Quaternion.Slerp(transform.rotation, Quaternion.LookRotation(input_movement), movement_rotateSpeed * Time.deltaTime);
         }
     }
     private void MovementAnimating()
     {
         //Running
-        if (move_speedDesired.magnitude > moveAnim_running_speedThreshhold)
+        if (movement_speedDesired.magnitude > moveAnim_running_speedThreshhold)
         {
             animator.SetInteger("walking", 2);
             MovementAnimatingFlame(2);
         }
         //Walking
-        else if (move_speedDesired.magnitude > moveAnim_walking_speedThreshhold)
+        else if (movement_speedDesired.magnitude > moveAnim_walking_speedThreshhold)
         {
             animator.SetInteger("walking", 1);
             MovementAnimatingFlame(1);
@@ -167,14 +150,49 @@ public class CharacterControler : MonoBehaviour
     //Carry
     private void CarryInit()
     {
+        //Check if carry is possible
+        carry_object = rf.col_carryRange.GetComponent<CarryRangeControler>().selected;
+        if (carry_object != null) 
+        { 
+            currentState = Status.Carry;
+            animator.SetTrigger("Carry");
 
+            carry_object.GetComponent<RessourceItemControler>().PickUp();
+
+            //Deactivate Right hand flame
+            rf.anim_flame_right.transform.Find("Flame").GetComponent<SkinnedMeshRenderer>().enabled = false;
+            rf.anim_flame_right.transform.Find("Spot Light").GetComponent<Light>().enabled = false;
+
+            //Activate Particle Systems
+            rf.anim_partSystemCarry.Play();
+        }
+    }
+    private void CarryState()
+    {
+        Movement(carry_maxSpeed);
+        MovementAnimating();
+        if (carry_object != null)
+        {
+            carry_object.GetComponent<Rigidbody>().velocity = carry_force * (rf.carry.transform.position - carry_object.GetComponent<Transform>().position);
+        }
+    }
+    private void CarryRelease()
+    {
+        //Release
+        carry_object.GetComponent<RessourceItemControler>().Release();
+        //Stop Particle Systems
+        rf.anim_partSystemCarry.Stop();
+        rf.anim_partSystemCarry.Clear();
+        MoveInit();
     }
 
     //Destroy
     private void DestroyInit()
     {
         currentState = Status.Destroy;
-        animator.SetTrigger("Destroy");
+        animator.SetTrigger("Destroy"); 
+        
+        movement_speedDesired = Vector3.zero;
         destroy_shotCount = 1;
 
         //Deactivate Right hand flame
@@ -182,7 +200,7 @@ public class CharacterControler : MonoBehaviour
         rf.anim_flame_right.transform.Find("Spot Light").GetComponent<Light>().enabled = false;
 
         //Switch HeadMaterial
-        transform.Find("Head").GetComponent<SkinnedMeshRenderer>().material = rf.mt_headFocus;
+        rf.head.GetComponent<SkinnedMeshRenderer>().material = rf.mt_headFocus;
 
     }
     private void DestroyAdd()
@@ -204,7 +222,7 @@ public class CharacterControler : MonoBehaviour
 
 
     //Listeners
-    private void DestroyAnimationEvent(int val)
+    public void DestroyAnimationEvent(int val)
     {
         if (val == 1)
         {
@@ -218,13 +236,17 @@ public class CharacterControler : MonoBehaviour
             }
             else
             {
-                MovementInit();
+                MoveInit();
             }
         }
     }
     private void OnMove(InputValue val)
     {
-        input_movement.Set(val.Get<Vector2>().x, 0f, val.Get<Vector2>().y);
+        input_movement.Set(val.Get<Vector2>().x, 0f, val.Get<Vector2>().y);//Decellerate
+        if (input_movement.magnitude < movementInput_accelMin)
+        {
+            input_movement = Vector3.zero;
+        }
     }
     private void OnDestroy()
     {
@@ -239,13 +261,13 @@ public class CharacterControler : MonoBehaviour
     }
     private void OnCarry()
     {
-        if (currentState != Status.Carry)
+        if (currentState == Status.Move)
         {
             CarryInit();
         }
-        else
+        else if (currentState == Status.Carry)
         {
-            MovementInit();
+            CarryRelease();
         }
     }
 }

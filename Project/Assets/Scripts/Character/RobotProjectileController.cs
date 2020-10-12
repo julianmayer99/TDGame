@@ -32,6 +32,7 @@ public class RobotProjectileController : MonoBehaviour
     private float armedLifetime = 3f;
 
     private float armed_targetingDistance = 300f;
+    private Vector3 armed_targetingVector = new Vector3();
     private Transform armed_target = null;
     private float armed_targetDistance = Mathf.Infinity;
     private float armed_lerpFactor = 0f;
@@ -98,12 +99,16 @@ public class RobotProjectileController : MonoBehaviour
             }
         }
 
+        //HeatSeeking
         if (armed_targetDistance <= armed_targetingDistance)
         {
             mesh.material = mat_active;
             //Steer
-            rb.velocity = Vector3.Lerp(rb.velocity.normalized, (armed_target.position - pos).normalized, Mathf.Min(armed_lerpFactor * armed_targetingDistance / armed_targetDistance, 1f * Time.deltaTime)).normalized * speed;
+            armed_targetingVector = (armed_target.position - pos).normalized;
+            rb.velocity = Vector3.Lerp(rb.velocity.normalized, armed_targetingVector, Mathf.Min(armed_lerpFactor * armed_targetingDistance / armed_targetDistance, 1f * Time.deltaTime)).normalized * speed;
         }
+
+        //Flying "Blind"
         else
         {
             mesh.material = mat;
